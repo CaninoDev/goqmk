@@ -1,14 +1,14 @@
-// Package go-qmk provides QMK API wrapper utilities
+// Package goqmk provides a Go wrapper to QMK's asynchronous API that Web and GUI tools can use to compile arbitrary keymaps for any keyboard supported by QMK.
 package goqmk
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"time"
+	"fmt"
 )
 
 const qmkAPI = "https://api.qmk.fm/v1/keyboards"
