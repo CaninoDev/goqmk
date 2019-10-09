@@ -1,5 +1,5 @@
 // Package go-qmk provides QMK API wrapper utilities
-package qmk
+package goqmk
 
 import (
 	"encoding/json"
