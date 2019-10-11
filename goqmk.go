@@ -3,12 +3,15 @@ package goqmk
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"strings"
 	"time"
-	"fmt"
 )
 
 const qmkAPI = "https://api.qmk.fm/v1/keyboards"
@@ -31,6 +34,8 @@ type Keyboard struct {
 	DeviceVersion string   `json:"device_ver"`
 	Identifier    string   `json:"identifier"`
 	Maintainer    string   `json:"maintainer,omitempty"`
+	Description   string   `json:"description,omitempty"`
+	Layouts       []string `json:"layouts"`
 }
 
 // A rawData is the super data structure for Keyboard
@@ -66,6 +71,16 @@ func Keymaps(kb string) []string {
 	return keyboardData[kb].Keymaps
 }
 
+func Layouts(kb string) []string {
+	var layoutList []string
+	keyboardData := queryQMK(kb)
+
+	for _, v := range keyboardData[kb].Layouts {
+		layoutList = append(layoutList, v)
+	}
+	return layoutList
+}
+
 // queryQMK is the principal internal function that queries QMK's api
 func queryQMK(kb string) map[string]Keyboard {
 	var rawJSON json.RawMessage
@@ -97,4 +112,34 @@ func queryQMK(kb string) map[string]Keyboard {
 	}
 
 	return rawData.Keyboards
+}
+
+func DownloadHex(keyboard string, keymap string) error {
+	var depathifyString string
+	depathifyString = strings.ReplaceAll(keyboard, "/", "_")
+	keymap = "default"
+	fileName := fmt.Sprintf("%s_%s.hex", depathifyString, keymap)
+	keyboardURL := fmt.Sprintf("%s/%s", qmkAPI, fileName)
+
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Get the data
+	resp, err := http.Get(keyboardURL)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
