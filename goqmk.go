@@ -122,7 +122,7 @@ func DownloadHex(keyboard string, keymap string) error {
 	keyboardURL := fmt.Sprintf("%s/%s", qmkAPI, fileName)
 
 	// Create the file
-	out, err := os.Create(filepath)
+	out, err := os.Create(fileName)
 	if err != nil {
 		return err
 	}
