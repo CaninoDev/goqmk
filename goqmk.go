@@ -12,6 +12,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"github.com/patrickmn/go-cache"
 )
 
 const qmkAPI = "https://api.qmk.fm/v1/keyboards"
@@ -19,6 +20,8 @@ const qmkAPI = "https://api.qmk.fm/v1/keyboards"
 var httpClient = &http.Client{
 	Timeout: time.Second * 2,
 }
+
+var localCache = cache.New(cache.NoExpiration, -1)
 
 // A Keyboard contains metadata as to available layouts,
 // keymaps, identifier etc...
@@ -48,37 +51,81 @@ type rawData struct {
 // names.
 func AllKeyboardsList() []string {
 	var keyboardsList []string
-	keyboardsData := queryQMK("all")
+	all, found := localCache.Get("all")
+		if found {
+			for k, _ := range all.(map[string]interface{}) {
+				keyboardsList = append(keyboardsList, k)
+			}
+		} else {
+			keyboardsData := queryQMK("all")
+			localCache.Set("all", keyboardsData, cache.NoExpiration)
+			for k, _ := range keyboardsData {
+				keyboardsList = append(keyboardsList, k)
+			}
 
-	for k, _ := range keyboardsData {
-		keyboardsList = append(keyboardsList, k)
-	}
-
-	return keyboardsList
+		}
+		return keyboardsList
 }
 
 // Keyboard queries QMK API and returns a Keyboard containing
 // its particulars.
 func KeyboardData(keyboard string) Keyboard {
-	rawData := queryQMK(keyboard)
-	return rawData[keyboard]
+	var cacheKey string
+	cacheKey = fmt.Sprintf("%sData", keyboard)
+	data, found := localCache.Get(cacheKey)
+	if found {
+		return data.(Keyboard)
+	} else {
+		rawData := queryQMK(keyboard)
+		localCache.Set(cacheKey, rawData[keyboard], cache.NoExpiration)
+		return rawData[keyboard]
+	}
+
 }
 
 // Keymaps queries QMK API for a list of keymaps associated with a particular
 // keyboard.
-func Keymaps(kb string) []string {
-	keyboardData := queryQMK(kb)
-	return keyboardData[kb].Keymaps
+func Keymaps(keyboard string) []string {
+	var cacheKey string
+	cacheKey = fmt.Sprintf("%sMaps", keyboard)
+	var keymapsList []string
+
+	data, found := localCache.Get(keyboard)
+	if found {
+		for k, _ := range data.(map[string]interface{}) {
+			keymapsList = append(keymapsList, k)
+		}
+
+	} else {
+		keyboardData := queryQMK(keyboard)
+		for _, v := range keyboardData[keyboard].Keymaps {
+			keymapsList = append(keymapsList, v)
+		}
+		localCache.Set(cacheKey, keymapsList, cache.NoExpiration)
+
+	}
+	return keymapsList
 }
 
 func Layouts(kb string) []string {
-	var layoutList []string
-	keyboardData := queryQMK(kb)
+	var cacheKey string
+	cacheKey = fmt.Sprintf("%sLayouts", keyboard)
+	var layoutsList []string
 
-	for _, v := range keyboardData[kb].Layouts {
-		layoutList = append(layoutList, v)
+	data, found := localCache.Get(cacheKey)
+	if found {
+		for k, _ := range data.(map[string]interface{}) {
+			layoutsList = append(layoutsList, k)
+		}
+
+	} else {
+		keyboardData := queryQMK(keyboard)
+		for _, v := range keyboardData[keyboard].Layouts {
+			layoutsList = append(layoutsList, v)
+		}
+		localCache.Set(cacheKey, layoutsList, cache.NoExpiration)
 	}
-	return layoutList
+	return layoutsList
 }
 
 func GetBootLoaderType(keyboard string) string {
