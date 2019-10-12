@@ -107,7 +107,7 @@ func Keymaps(keyboard string) []string {
 	return keymapsList
 }
 
-func Layouts(kb string) []string {
+func Layouts(keyboard string) []string {
 	var cacheKey string
 	cacheKey = fmt.Sprintf("%sLayouts", keyboard)
 	var layoutsList []string
@@ -134,12 +134,12 @@ func GetBootLoaderType(keyboard string) string {
 }
 
 // queryQMK is the principal internal function that queries QMK's api
-func queryQMK(kb string) map[string]Keyboard {
+func queryQMK(keyboard string) map[string]Keyboard {
 	var rawJSON json.RawMessage
 	var rawData rawData
 	var escapedString string
 
-	escapedString = (&url.URL{Path: kb}).String()
+	escapedString = (&url.URL{Path: keyboard}).String()
 
 	keyboardURL := fmt.Sprintf("%s/%s", qmkAPI, escapedString)
 
