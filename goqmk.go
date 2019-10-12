@@ -35,7 +35,7 @@ type Keyboard struct {
 	Identifier    string   `json:"identifier"`
 	Maintainer    string   `json:"maintainer,omitempty"`
 	Description   string   `json:"description,omitempty"`
-	Layouts       []string `json:"layouts"`
+	Layouts       []string `json:"layout"`
 }
 
 // A rawData is the super data structure for Keyboard
@@ -79,6 +79,11 @@ func Layouts(kb string) []string {
 		layoutList = append(layoutList, v)
 	}
 	return layoutList
+}
+
+func GetBootLoaderType(keyboard string) string {
+	rawData := queryQMK(keyboard)
+	return rawData[keyboard].BootLoader
 }
 
 // queryQMK is the principal internal function that queries QMK's api
