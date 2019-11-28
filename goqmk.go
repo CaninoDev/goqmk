@@ -176,21 +176,21 @@ func DownloadHex(keyboard string, keymap string) (string, error) {
 	// Create the file
 	out, err := os.Create(fileName)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer out.Close()
 
 	// Get the data
 	resp, err := http.Get(keyboardURL)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	defer resp.Body.Close()
 
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	var filename string
