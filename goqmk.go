@@ -166,7 +166,7 @@ func queryQMK(keyboard string) map[string]Keyboard {
 	return rawData.Keyboards
 }
 
-func DownloadHex(keyboard string, keymap string) error {
+func DownloadHex(keyboard string, keymap string) (string, error) {
 	var depathifyString string
 	depathifyString = strings.ReplaceAll(keyboard, "/", "_")
 	keymap = "default"
@@ -176,22 +176,25 @@ func DownloadHex(keyboard string, keymap string) error {
 	// Create the file
 	out, err := os.Create(fileName)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer out.Close()
 
 	// Get the data
 	resp, err := http.Get(keyboardURL)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	var filename string
+	filename = out.Name()
+
+	return filename, nil
 }
